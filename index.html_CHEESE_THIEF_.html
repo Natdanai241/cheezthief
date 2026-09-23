@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>CHEESE THIEF — ชีสหนูอยู่ไหน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --n1:#0a0d22;--n2:#141a3d;--n3:#1e2657;--ink:#eef0ff;--dim:#a6adda;
+  --cheese:#ffd05c;--cheese2:#f2a33c;--moon:#fff6d5;--pink:#ff9fc0;--mint:#8ff0d0;
+  --bad:#ff5f6d;--good:#5ce1a6;--glass:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);
+  --safeT:env(safe-area-inset-top,0px);--safeB:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;padding:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+body{
+  font-family:'Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--ink);background:radial-gradient(120% 90% at 50% -10%,#28306b 0%,var(--n2) 42%,var(--n1) 100%);
+  font-size:15px;line-height:1.45;user-select:none
+}
+#errpanel{display:none;position:fixed;left:0;right:0;top:0;z-index:9999;background:#8b0f1d;color:#fff;
+  font-size:12px;padding:8px 10px;border-bottom:2px solid #ff5f6d;max-height:38vh;overflow:auto;white-space:pre-wrap}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;opacity:.5;animation:tw 3.5s infinite ease-in-out}
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.85;transform:scale(1.15)}}
+#moon{position:absolute;right:8%;top:5%;width:74px;height:74px;border-radius:50%;
+  background:radial-gradient(circle at 34% 34%,#fffdf0,#ffe9a8 60%,#f6d27a);
+  box-shadow:0 0 44px 14px rgba(255,235,170,.24);animation:fl 7s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+#floor{position:absolute;left:0;right:0;bottom:0;height:26%;
+  background:linear-gradient(180deg,rgba(60,38,26,0) 0%,rgba(58,36,24,.55) 60%,rgba(40,24,16,.8) 100%)}
+#app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;padding-top:var(--safeT);padding-bottom:var(--safeB)}
+#topbar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px 4px}
+#topbar .ttl{font-weight:800;font-size:14px;letter-spacing:.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .ttl b{color:var(--cheese)}
+.iconbtn{width:34px;height:34px;flex:0 0 34px;border-radius:12px;border:1px solid var(--line);background:var(--glass);
+  color:var(--ink);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.iconbtn.off{opacity:.38}
+#screens{position:relative;flex:1 1 auto;min-height:0}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;padding:8px 14px 14px;
+  opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .22s,transform .22s;min-height:0}
+.screen.on{opacity:1;pointer-events:auto;transform:none}
+.grow{flex:1 1 auto;min-height:0}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+h1.logo{margin:0;font-size:clamp(26px,8.5vw,40px);font-weight:800;letter-spacing:1px;line-height:1.05;
+  background:linear-gradient(180deg,#fff,var(--cheese));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--dim);font-size:13px;margin:2px 0 0}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:12px;backdrop-filter:blur(6px)}
+.btn{display:block;width:100%;border:none;border-radius:16px;padding:13px 14px;font-size:16px;font-weight:700;
+  font-family:inherit;cursor:pointer;background:var(--glass);color:var(--ink);border:1px solid var(--line);margin:0}
+.btn.primary{background:linear-gradient(180deg,var(--cheese),var(--cheese2));color:#3a2408;border:none;
+  box-shadow:0 8px 22px -8px rgba(255,190,80,.7)}
+.btn.ghost{background:transparent}
+.btn.danger{background:linear-gradient(180deg,#ff7a85,#e0414f);color:#fff;border:none}
+.btn:disabled{opacity:.42;cursor:default}
+.btn:active{transform:scale(.985)}
+.row{display:flex;gap:8px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);border-radius:999px;
+  padding:7px 12px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
+.chip.sel{background:linear-gradient(180deg,var(--cheese),var(--cheese2));color:#3a2408;border-color:transparent}
+.chip.sm{padding:5px 9px;font-size:12px}
+.lbl{font-size:12px;color:var(--dim);font-weight:600}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px}
+.ptile{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:14px;padding:9px 6px;text-align:center;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.ptile .mi{display:block;font-size:20px;line-height:1.1}
+.ptile.sel{background:linear-gradient(180deg,var(--cheese),var(--cheese2));color:#3a2408;border-color:transparent}
+.ptile.dis{opacity:.4}
+.cheesebig{font-size:clamp(54px,18vw,92px);line-height:1;filter:drop-shadow(0 10px 18px rgba(255,190,80,.35));animation:fl 5s ease-in-out infinite}
+.micerow{display:flex;gap:10px;justify-content:center;font-size:26px;margin-top:6px}
+.micerow span{animation:fl 4s ease-in-out infinite}
+.micerow span:nth-child(2){animation-delay:.5s}.micerow span:nth-child(3){animation-delay:1s}
+.micerow span:nth-child(4){animation-delay:1.5s}.micerow span:nth-child(5){animation-delay:2s}
+.tl{display:flex;gap:5px;justify-content:center;align-items:center}
+.tl .h{flex:1;max-width:52px;text-align:center;border:1px solid var(--line);border-radius:12px;padding:6px 2px;font-size:12px;
+  font-weight:700;color:var(--dim);background:rgba(255,255,255,.04);transition:.25s}
+.tl .h.now{background:linear-gradient(180deg,#fff2c9,var(--cheese));color:#3a2408;border-color:transparent;transform:scale(1.12)}
+.tl .h.past{opacity:.42}
+.rolecard{width:min(74vw,260px);aspect-ratio:3/4.1;border-radius:22px;position:relative;cursor:pointer;perspective:900px}
+.rolecard .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.3,1.2,.4,1)}
+.rolecard.flip .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:22px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;border:2px solid var(--line);padding:12px;text-align:center}
+.face.back{background:linear-gradient(160deg,#2a3170,#161c46);box-shadow:inset 0 0 40px rgba(0,0,0,.4)}
+.face.front{transform:rotateY(180deg)}
+.face.thief{background:linear-gradient(160deg,#5a1f2e,#2a0f18);border-color:#ff8fa3}
+.face.sleepy{background:linear-gradient(160deg,#1f4a5a,#0f242a);border-color:#8ff0d0}
+.face .big{font-size:52px;line-height:1}
+.face .nm{font-size:22px;font-weight:800}
+.face .ds{font-size:12.5px;color:#e6e9ff;opacity:.85}
+.diebox{width:96px;height:96px;border-radius:20px;background:linear-gradient(160deg,#fffdf4,#ecebdd);
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:14px;gap:4px;
+  box-shadow:0 10px 24px -8px rgba(0,0,0,.6);cursor:pointer}
+.diebox i{border-radius:50%;background:transparent}
+.diebox i.on{background:#2a2350}
+.timerwrap{height:6px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;flex:0 0 auto}
+.timerbar{height:100%;width:100%;background:linear-gradient(90deg,var(--mint),var(--cheese));transition:width .95s linear}
+.timerbar.low{background:linear-gradient(90deg,#ff9f6d,var(--bad))}
+.lines{display:flex;flex-direction:column;gap:7px}
+.line{display:flex;gap:9px;align-items:flex-start;background:rgba(255,255,255,.05);border:1px solid var(--line);
+  border-radius:13px;padding:9px 11px;font-size:14px}
+.line .ic{font-size:17px;line-height:1.2}
+.line.warn{border-color:rgba(255,120,140,.5);background:rgba(255,90,110,.12)}
+.line.good{border-color:rgba(140,240,200,.45);background:rgba(90,230,180,.1)}
+.badge{display:inline-block;border-radius:99px;padding:2px 9px;font-size:11px;font-weight:700}
+.badge.thief{background:rgba(255,120,140,.2);color:#ffb3c0}
+.badge.sleepy{background:rgba(140,240,200,.18);color:#9ff3d8}
+.badge.fol{background:rgba(255,208,92,.2);color:var(--cheese)}
+.tlist{display:flex;flex-direction:column;gap:6px}
+.trow{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.05);border:1px solid var(--line);
+  border-radius:12px;padding:7px 10px;font-size:13px}
+.trow b{color:var(--cheese)}
+.trow .who{min-width:62px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.big-note{font-size:clamp(20px,6vw,28px);font-weight:800}
+.hint{font-size:12px;color:var(--dim)}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table td{padding:6px 5px;border-bottom:1px solid rgba(255,255,255,.08)}
+.table td:first-child{font-weight:700}
+.win{color:var(--good)}.lose{color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:calc(16px + var(--safeB));transform:translateX(-50%);background:#0f1433;color:#fff;
+  border:1px solid var(--line);border-radius:14px;padding:10px 16px;font-size:13px;z-index:5000;opacity:0;
+  transition:opacity .25s;pointer-events:none;max-width:88vw;text-align:center}
+.toast.on{opacity:1}
+.zzz{animation:zz 3s ease-in-out infinite;display:inline-block}
+@keyframes zz{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-5px)}}
+input[type=text]{width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.07);
+  color:var(--ink);padding:10px 12px;font-size:15px;font-family:inherit}
+input[type=text]::placeholder{color:#8e96c7}
+.small{font-size:12px}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.gone{animation:gone 1s ease forwards}
+@keyframes gone{to{opacity:0;transform:translateY(-30px) rotate(25deg) scale(.4)}}
+.pulse{animation:pl 1.4s ease-in-out infinite}
+@keyframes pl{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+</style>
+</head>
+<body>
+<div id="errpanel"></div>
+<div id="bg"><div id="moon"></div><div id="floor"></div></div>
+
+<div id="app">
+  <header id="topbar">
+    <div class="ttl">🧀 <b>CHEESE THIEF</b> · ชีสหนูอยู่ไหน</div>
+    <button class="iconbtn" id="btn-sfx" title="เสียง">🔊</button>
+    <button class="iconbtn off" id="btn-music" title="เพลง">🎵</button>
+    <button class="iconbtn" id="btn-help" title="กติกา">❓</button>
+  </header>
+
+  <main id="screens">
+
+    <!-- HOME -->
+    <section class="screen on center" id="s-home">
+      <div class="cheesebig">🧀</div>
+      <h1 class="logo">CHEESE THIEF</h1>
+      <p class="sub">ชีสหนูอยู่ไหน · เกมสืบหาหนูขโมยชีส 4–8 คน</p>
+      <div class="micerow"><span>🐭</span><span>🐁</span><span>🐭</span><span>🐁</span><span>🐭</span></div>
+      <div class="stack" style="width:min(92vw,380px);margin-top:14px">
+        <button class="btn primary" id="btn-go-local">🐭 เล่นในเครื่องเดียว (ส่งต่อกัน)</button>
+        <button class="btn" id="btn-go-online">🌐 เล่นออนไลน์กับเพื่อน</button>
+        <button class="btn ghost" id="btn-go-rules">📜 กติกาการเล่น</button>
+      </div>
+    </section>
+
+    <!-- RULES -->
+    <section class="screen" id="s-rules">
+      <div class="spread"><div class="big-note">📜 กติกา</div><button class="chip" id="btn-rules-back">ปิด</button></div>
+      <div class="grow scroll card" id="rules-body"></div>
+    </section>
+
+    <!-- SETUP -->
+    <section class="screen" id="s-setup">
+      <div class="spread"><div class="big-note">⚙️ ตั้งค่าวงเล่น</div><button class="chip" id="btn-setup-back">กลับ</button></div>
+      <div class="card">
+        <div class="spread">
+          <span class="lbl">จำนวนผู้เล่น</span>
+          <div class="row">
+            <button class="iconbtn" id="pc-minus">−</button>
+            <div style="width:42px;text-align:center;font-size:20px;font-weight:800" id="pc-val">5</div>
+            <button class="iconbtn" id="pc-plus">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="grow scroll stack" id="setup-list"></div>
+      <div class="card stack">
+        <div class="row"><span class="lbl" style="flex:1">ระดับบอท</span>
+          <div class="chips" id="diff-chips">
+            <button class="chip sm" data-lv="easy">ง่าย</button>
+            <button class="chip sm sel" data-lv="normal">ปกติ</button>
+            <button class="chip sm" data-lv="hard">ยาก</button>
+          </div>
+        </div>
+        <div class="row"><span class="lbl" style="flex:1">เวลานับถอยหลังต่อตา</span>
+          <div class="chips" id="time-chips">
+            <button class="chip sm" data-t="30">30วิ</button>
+            <button class="chip sm sel" data-t="60">60วิ</button>
+            <button class="chip sm" data-t="90">90วิ</button>
+            <button class="chip sm" data-t="0">ปิด</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" id="btn-start-local">🌙 เริ่มเกม</button>
+    </section>
+
+    <!-- ONLINE -->
+    <section class="screen" id="s-online">
+      <div class="spread"><div class="big-note">🌐 เล่นออนไลน์</div><button class="chip" id="btn-online-back">กลับ</button></div>
+      <div class="grow scroll stack">
+        <div class="card stack">
+          <span class="lbl">ชื่อของคุณ</span>
+          <input type="text" id="on-name" placeholder="เช่น ต้อม" maxlength="12">
+        </div>
+        <div class="card stack">
+          <span class="lbl">สร้างห้องใหม่ (คุณเป็นเจ้าบ้าน)</span>
+          <button class="btn primary" id="btn-on-host">🏠 สร้างห้อง</button>
+        </div>
+        <div class="card stack">
+          <span class="lbl">เข้าร่วมห้อง</span>
+          <input type="text" id="on-code" placeholder="รหัสห้อง 5 ตัว" maxlength="5">
+          <button class="btn" id="btn-on-join">🚪 เข้าร่วม</button>
+        </div>
+        <p class="hint" id="on-msg">โหมดออนไลน์ใช้การเชื่อมต่อแบบ P2P ระหว่างเบราว์เซอร์ ต้องต่ออินเทอร์เน็ต</p>
+      </div>
+    </section>
+
+    <!-- LOBBY -->
+    <section class="screen" id="s-lobby">
+      <div class="spread"><div class="big-note">🏠 ห้องรอ</div><button class="chip" id="btn-lobby-leave">ออก</button></div>
+      <div class="card center"><span class="lbl">รหัสห้อง</span>
+        <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:var(--cheese)" id="lobby-code">-----</div>
+      </div>
+      <div class="grow scroll"><div class="pgrid" id="lobby-players"></div></div>
+      <p class="hint" id="lobby-msg">ต้องมีผู้เล่น 4–8 คนจึงเริ่มได้</p>
+      <div class="row"><button class="btn" id="btn-lobby-bot" style="flex:1">🤖 เพิ่มบอท</button>
+        <button class="btn primary" id="btn-lobby-start" style="flex:1">เริ่มเกม</button></div>
+    </section>
+
+    <!-- HANDOFF -->
+    <section class="screen center" id="s-handoff">
+      <div style="font-size:46px">📱</div>
+      <p class="sub">ส่งเครื่องให้</p>
+      <div class="big-note" id="ho-name" style="color:var(--cheese)">—</div>
+      <p class="hint" id="ho-sub" style="max-width:300px">คนอื่นห้ามแอบดูหน้าจอนะ 🤫</p>
+      <div style="height:14px"></div>
+      <button class="btn primary" id="btn-ho-open" style="width:min(88vw,340px)">ฉันคือคนนี้ — เปิดดู</button>
+    </section>
+
+    <!-- BOT TURN -->
+    <section class="screen center" id="s-bot">
+      <div style="font-size:46px" class="pulse">🤖</div>
+      <div class="big-note" id="bot-name">บอท</div>
+      <p class="sub" id="bot-act">กำลังขยับในความมืด...</p>
+      <div class="micerow"><span>💤</span><span>🌙</span><span>💤</span></div>
+    </section>
+
+    <!-- PRIVATE -->
+    <section class="screen" id="s-private">
+      <div class="spread">
+        <div class="row" style="gap:6px"><span style="font-size:18px">🐭</span>
+          <b id="pv-name" style="font-size:15px">—</b></div>
+        <div class="row" style="gap:6px"><span class="hint" id="pv-sec">—</span></div>
+      </div>
+      <div class="timerwrap"><div class="timerbar" id="pv-bar"></div></div>
+
+      <div class="grow center" id="pv-step-role">
+        <p class="sub">แตะการ์ดเพื่อดูบทบาทลับของคุณ</p>
+        <div class="rolecard" id="pv-card">
+          <div class="inner">
+            <div class="face back"><div class="big">🧀</div><div class="ds">CHEESE THIEF</div><div class="ds">แตะเพื่อเปิด</div></div>
+            <div class="face front" id="pv-face"><div class="big" id="pv-role-ic">🐭</div>
+              <div class="nm" id="pv-role-nm">—</div><div class="ds" id="pv-role-ds">—</div></div>
+          </div>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn primary" id="btn-pv-torole" style="width:min(88vw,320px)">ต่อไป: ดูลูกเต๋า</button>
+      </div>
+
+      <div class="grow center" id="pv-step-die">
+        <p class="sub">แตะถ้วยเพื่อดูเวลาตื่นของคุณ</p>
+        <div id="pv-cup" style="font-size:72px;cursor:pointer">🥛</div>
+        <div id="pv-die-wrap" style="display:none;align-items:center;flex-direction:column;gap:8px">
+          <div class="diebox" id="pv-die"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="big-note" id="pv-die-txt">—</div>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn primary" id="btn-pv-todie" style="width:min(88vw,320px)" disabled>ต่อไป: คืนนี้เกิดอะไรขึ้น</button>
+      </div>
+
+      <div class="grow scroll stack" id="pv-step-night">
+        <div class="lines" id="pv-lines"></div>
+        <div class="card stack" id="pv-prompt" style="display:none">
+          <span class="lbl" id="pv-prompt-lbl">—</span>
+          <div class="pgrid" id="pv-prompt-opts"></div>
+        </div>
+      </div>
+      <button class="btn primary" id="btn-pv-done">ส่งเครื่องให้คนถัดไป</button>
+    </section>
+
+    <!-- NIGHT ANIM -->
+    <section class="screen center" id="s-night">
+      <div class="big-note">🌙 กลางดึกในบ้านหนู</div>
+      <p class="sub">ทุกคนหลับตา... นาฬิกาเดินไปทีละชั่วโมง</p>
+      <div style="height:6px"></div>
+      <div style="font-size:clamp(40px,13vw,68px);font-weight:800;color:var(--cheese)" id="na-hour">ตี 1</div>
+      <div class="micerow" id="na-mice"><span>🐭💤</span><span>🐁💤</span><span>🐭💤</span><span>🐁💤</span></div>
+      <div style="height:8px"></div>
+      <div class="tl" id="na-tl"></div>
+      <div style="height:12px"></div>
+      <div id="na-cheese" style="font-size:52px">🧀</div>
+    </section>
+
+    <!-- MORNING -->
+    <section class="screen center" id="s-morning">
+      <div style="font-size:54px">☀️</div>
+      <div class="big-note">เช้าแล้ว!</div>
+      <p class="sub" style="max-width:320px">ทุกคนลืมตาขึ้นมา... <b style="color:var(--cheese)">ชีสก้อนใหญ่หายไปแล้ว!</b><br>ใครคือหนูขโมย?</p>
+      <div class="micerow"><span>🐭</span><span>😲</span><span>🐁</span><span>😱</span><span>🐭</span></div>
+      <div style="height:14px"></div>
+      <button class="btn primary" id="btn-morning-next" style="width:min(88vw,340px)">เริ่มการถกเถียง 🗣️</button>
+    </section>
+
+    <!-- DISCUSS -->
+    <section class="screen" id="s-discuss">
+      <div class="spread"><div class="big-note">🗣️ ให้ปากคำ & ถกเถียง</div>
+        <span class="hint" id="dc-round">รอบ 1</span></div>
+      <div class="grow scroll"><div class="tlist" id="dc-board"></div></div>
+
+      <div class="card stack" id="dc-controls">
+        <div class="spread"><span class="lbl">ตาของ</span><b id="dc-turn" style="color:var(--cheese)">—</b></div>
+        <div><span class="lbl">ฉันตื่นตอน</span>
+          <div class="chips" id="dc-hours"></div></div>
+        <div><span class="lbl">ตอนนั้นฉันเห็น</span>
+          <div class="chips" id="dc-saw">
+            <button class="chip sm" data-s="there">🧀 ชีสยังอยู่</button>
+            <button class="chip sm" data-s="gone">❌ ชีสหายแล้ว</button>
+            <button class="chip sm" data-s="theft">😱 เห็นคนขโมย</button>
+          </div></div>
+        <div id="dc-target-wrap" style="display:none"><span class="lbl">ฉันเห็น...ขโมย</span>
+          <div class="chips" id="dc-target"></div></div>
+        <div><button class="chip sm" id="dc-ins-toggle">🔍 อ้างว่าแอบดูลูกเต๋า</button></div>
+        <div id="dc-ins-wrap" style="display:none">
+          <span class="lbl">ฉันดูเต๋าของ</span><div class="chips" id="dc-ins-p"></div>
+          <span class="lbl">ได้เลข</span><div class="chips" id="dc-ins-v"></div>
+        </div>
+        <button class="btn primary" id="btn-dc-submit">ยืนยันคำให้การ</button>
+      </div>
+
+      <div class="card stack" id="dc-free" style="display:none">
+        <div class="center"><span class="lbl">เวลาถกเถียงอิสระ (คุยกันได้ แต่ห้ามโชว์การ์ด/ลูกเต๋า)</span>
+          <div style="font-size:34px;font-weight:800;color:var(--cheese)" id="dc-clock">02:00</div></div>
+        <button class="btn primary" id="btn-dc-vote">🗳️ ไปโหวตเลย</button>
+      </div>
+      <p class="hint" id="dc-wait" style="display:none">รอผู้เล่นคนอื่น...</p>
+    </section>
+
+    <!-- VOTE -->
+    <section class="screen" id="s-vote">
+      <div class="spread"><div class="big-note">🗳️ โหวต</div><b id="vt-name" style="color:var(--cheese)">—</b></div>
+      <p class="hint" id="vt-hint">เลือกคนที่คุณคิดว่าเป็นหนูขโมย — ทุกคนโหวตพร้อมกัน ไม่มีใครเห็นโหวตของคุณจนกว่าจะเฉลย</p>
+      <div class="timerwrap"><div class="timerbar" id="vt-bar"></div></div>
+      <div class="grow scroll"><div class="pgrid" id="vt-grid"></div></div>
+      <button class="btn primary" id="btn-vt-confirm" disabled>ยืนยันโหวต</button>
+    </section>
+
+    <!-- VOTE REVEAL -->
+    <section class="screen" id="s-votereveal">
+      <div class="big-note">🗳️ ผลโหวต</div>
+      <div class="grow scroll"><div class="tlist" id="vr-list"></div></div>
+      <div class="card" id="vr-summary"></div>
+      <button class="btn primary" id="btn-vr-next">เปิดการ์ด 🔎</button>
+    </section>
+
+    <!-- REVEAL -->
+    <section class="screen center" id="s-reveal">
+      <p class="sub">ผู้ที่ถูกโหวตมากที่สุดคือ</p>
+      <div class="big-note" id="rv-name" style="color:var(--cheese)">—</div>
+      <div style="height:8px"></div>
+      <div class="rolecard" id="rv-card">
+        <div class="inner">
+          <div class="face back"><div class="big">🧀</div><div class="ds">แตะเพื่อเปิดการ์ด</div></div>
+          <div class="face front" id="rv-face"><div class="big" id="rv-ic">🐭</div>
+            <div class="nm" id="rv-nm">—</div><div class="ds" id="rv-ds">—</div></div>
+        </div>
+      </div>
+      <div style="height:12px"></div>
+      <button class="btn primary" id="btn-rv-next" style="width:min(88vw,340px)" disabled>ดูผลการเล่น</button>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="s-result">
+      <div class="center">
+        <div style="font-size:44px" id="rs-ic">🧀</div>
+        <div class="big-note" id="rs-title">—</div>
+        <p class="sub" id="rs-sub">—</p>
+      </div>
+      <div class="grow scroll card"><table class="table" id="rs-table"></table></div>
+      <div class="row"><button class="btn" id="btn-rs-home" style="flex:1">🏠 เมนู</button>
+        <button class="btn primary" id="btn-rs-new" style="flex:1.4">🌙 เล่นรอบใหม่</button></div>
+    </section>
+
+    <!-- WAIT (online) -->
+    <section class="screen center" id="s-wait">
+      <div style="font-size:48px" class="zzz">💤</div>
+      <div class="big-note" id="wt-title">กำลังรอ...</div>
+      <p class="sub" id="wt-sub">—</p>
+      <div class="micerow"><span>🐭</span><span>🌙</span><span>🐁</span></div>
+    </section>
+
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){
+'use strict';
+/* =========================================================
+   0) ERROR PANEL
+   ========================================================= */
+var ERR = document.getElementById('errpanel');
+function fail(msg){
+  try{ ERR.style.display='block'; ERR.textContent = (ERR.textContent? ERR.textContent+'\n':'') + '⚠ ' + msg; }catch(e){}
+}
+window.addEventListener('error', function(e){ fail('JS: '+(e.message||'?')+' @line '+(e.lineno||'?')); });
+window.addEventListener('unhandledrejection', function(e){
+  var r=e.reason; fail('Promise: '+((r&&r.message)||r||'?'));
+});
+
+/* =========================================================
+   1) UTILS
+   ========================================================= */
+function $(id){ return document.getElementById(id); }
+function el(t,c,x){ var e=document.createElement(t); if(c)e.className=c; if(x!=null)e.textContent=x; return e; }
+function clr(n){ while(n && n.firstChild) n.removeChild(n.firstChild); }
+function rnd(n){ return Math.floor(Math.random()*n); }
+function pick(a){ return a[rnd(a.length)]; }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=rnd(i+1),t=a[i];a[i]=a[j];a[j]=t; } return a; }
+function on(id,fn){ var e=$(id); if(e) e.addEventListener('click',fn); else fail('ไม่พบปุ่ม #'+id); }
+var TH_NUM=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก'];
+function hourTxt(h){ return 'ตี '+h; }
+
+var _toastT=null;
+function toast(msg){
+  var t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(_toastT); _toastT=setTimeout(function(){ t.classList.remove('on'); },2200);
+}
+var CUR='s-home';
+function show(id){
+  var ss=document.querySelectorAll('.screen');
+  for(var i=0;i<ss.length;i++) ss[i].classList.remove('on');
+  var t=$(id); if(!t){ fail('ไม่พบหน้าจอ '+id); return; }
+  t.classList.add('on'); CUR=id;
+}
+
+/* stars */
+(function(){
+  var bg=$('bg');
+  for(var i=0;i<34;i++){
+    var s=el('div','star');
+    s.style.left=(Math.random()*100)+'%'; s.style.top=(Math.random()*62)+'%';
+    s.style.animationDelay=(Math.random()*3.5)+'s';
+    s.style.opacity=(0.25+Math.random()*0.5);
+    bg.appendChild(s);
+  }
+})();
+
+/* =========================================================
+   2) AUDIO (synth, no external files)
+   ========================================================= */
+var AU={
+  ctx:null, sfx:true, music:false, mGain:null, mTimer:null, mStep:0,
+  init:function(){
+    if(!this.ctx){
+      var C=window.AudioContext||window.webkitAudioContext;
+      if(!C) return;
+      try{ this.ctx=new C(); }catch(e){ return; }
+    }
+    if(this.ctx.state==='suspended'){ try{ this.ctx.resume(); }catch(e){} }
+  },
+  tone:function(f,dur,type,vol,delay){
+    if(!this.sfx) return; this.init(); if(!this.ctx) return;
+    var c=this.ctx,t0=c.currentTime+(delay||0);
+    var o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(f,t0);
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.14,t0+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+(dur||0.2));
+    o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0+(dur||0.2)+0.04);
+  },
+  tap:function(){ this.tone(520,.09,'triangle',.10); },
+  tick:function(){ this.tone(880,.05,'square',.05); },
+  squeak:function(){ this.tone(1180,.09,'sine',.09); this.tone(1520,.08,'sine',.07,.08); },
+  flip:function(){ this.tone(300,.14,'triangle',.12); this.tone(620,.18,'triangle',.10,.09); },
+  chime:function(){ this.tone(660,.25,'sine',.11); this.tone(880,.3,'sine',.10,.1); this.tone(1320,.4,'sine',.08,.2); },
+  steal:function(){ this.tone(180,.3,'sawtooth',.07); this.tone(120,.4,'sine',.07,.12); },
+  win:function(){ var s=[523,659,784,1046]; for(var i=0;i<s.length;i++) this.tone(s[i],.35,'triangle',.12,i*0.11); },
+  lose:function(){ var s=[440,392,330,247]; for(var i=0;i<s.length;i++) this.tone(s[i],.4,'sine',.11,i*0.13); },
+  toggleMusic:function(v){
+    this.music=v;
+    if(v){ this.init(); if(!this.ctx) return; this.startMusic(); } else this.stopMusic();
+  },
+  startMusic:function(){
+    var self=this; if(this.mTimer) return;
+    var c=this.ctx; if(!c) return;
+    this.mGain=c.createGain(); this.mGain.gain.value=0.05; this.mGain.connect(c.destination);
+    var scale=[261.6,311.1,349.2,392.0,466.2,523.3,622.3];
+    this.mStep=0;
+    this.mTimer=setInterval(function(){
+      if(!self.ctx||!self.mGain) return;
+      var t0=self.ctx.currentTime;
+      var f=scale[(self.mStep*3)%scale.length]/(self.mStep%4===0?2:1);
+      var o=self.ctx.createOscillator(), g=self.ctx.createGain(), fl=self.ctx.createBiquadFilter();
+      fl.type='lowpass'; fl.frequency.value=1100;
+      o.type='triangle'; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.5,t0+0.25);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+1.5);
+      o.connect(fl); fl.connect(g); g.connect(self.mGain);
+      o.start(t0); o.stop(t0+1.6);
+      self.mStep++;
+    },780);
+  },
+  stopMusic:function(){
+    if(this.mTimer){ clearInterval(this.mTimer); this.mTimer=null; }
+    if(this.mGain){ try{ this.mGain.disconnect(); }catch(e){} this.mGain=null; }
+  }
+};
+
+/* =========================================================
+   3) TIMER
+   ========================================================= */
+var TM={id:null,end:0,total:0,bar:null,lbl:null,cb:null};
+function timerStart(sec,barId,lblId,cb){
+  timerStop();
+  TM.bar=$(barId); TM.lbl=lblId?$(lblId):null; TM.cb=cb; TM.total=sec;
+  if(!sec||sec<=0){ if(TM.bar) TM.bar.style.width='100%'; if(TM.lbl) TM.lbl.textContent='ไม่จำกัดเวลา'; return; }
+  TM.end=Date.now()+sec*1000;
+  function step(){
+    var left=Math.max(0,TM.end-Date.now());
+    var pct=(left/(TM.total*1000))*100;
+    if(TM.bar){ TM.bar.style.width=pct+'%'; TM.bar.classList.toggle('low',pct<30); }
+    if(TM.lbl) TM.lbl.textContent='⏱ '+Math.ceil(left/1000)+' วิ';
+    if(left<=0){ var c=TM.cb; timerStop(); if(c) c(); }
+  }
+  step(); TM.id=setInterval(step,300);
+}
+function timerStop(){ if(TM.id){ clearInterval(TM.id); TM.id=null; } TM.cb=null; }
+
+/* =========================================================
+   4) STATE + RULES ENGINE
+   ========================================================= */
+var G={
+  mode:'local', players:[], pmap:{}, n:0, level:'normal', timerSec:60,
+  round:0, role:{}, die:{}, awake:{}, thiefId:null, thiefHour:0,
+  witnesses:[], followerId:null, followerChosen:false,
+  recruitId:null, recruitDone:false,
+  inspect:{}, testimony:{}, tOrder:[], ti:0, dPhase:'testimony',
+  votes:{}, voteCands:[], isRunoff:false, accusedId:null, lastResult:null,
+  localActor:null, stage:'', ready:{}
+};
+function byId(id){ return G.pmap[id]||{name:'?',id:id}; }
+function nameOf(id){ return byId(id).name; }
+function rebuildMap(){ G.pmap={}; for(var i=0;i<G.players.length;i++) G.pmap[G.players[i].id]=G.players[i]; G.n=G.players.length; }
+
+function startRound(){
+  G.round++;
+  G.role={}; G.die={}; G.awake={}; G.inspect={}; G.testimony={}; G.votes={};
+  G.followerId=null; G.followerChosen=false; G.recruitId=null; G.recruitDone=false;
+  G.witnesses=[]; G.isRunoff=false; G.accusedId=null; G.lastResult=null; G.ready={};
+  var ids=G.players.map(function(p){return p.id;});
+  G.thiefId=pick(ids);
+  for(var h=1;h<=6;h++) G.awake[h]=[];
+  ids.forEach(function(id){
+    G.role[id]= (id===G.thiefId)?'thief':'sleepy';
+    G.die[id]=1+rnd(6);
+    G.awake[G.die[id]].push(id);
+  });
+  G.thiefHour=G.die[G.thiefId];
+  G.witnesses=G.awake[G.thiefHour].filter(function(id){ return id!==G.thiefId; });
+  // ผู้เห็นเหตุการณ์เพียงคนเดียว = เป็นสมุนอัตโนมัติ (ตามกติกา: ขโมย "เลือก" เมื่อมีหลายคน)
+  if(G.witnesses.length===1){ G.followerId=G.witnesses[0]; G.followerChosen=true; }
+  // จัดลำดับตาลับ: ขโมยต้องมาก่อนพยานเสมอ (กันข้อมูลรั่วเรื่องการเลือกสมุน)
+  G.tOrder=[]; G.ti=0; G.dPhase='testimony';
+}
+
+function nightInfo(id){
+  var h=G.die[id];
+  var others=(G.awake[h]||[]).filter(function(x){ return x!==id; });
+  var isThief=(id===G.thiefId);
+  var sawTheft=(!isThief && h===G.thiefHour);
+  var status = isThief?'steal':(sawTheft?'theft':(h<G.thiefHour?'there':'gone'));
+  return {hour:h,others:others,isThief:isThief,sawTheft:sawTheft,status:status,
+          alone:others.length===0, canInspect:(!isThief && others.length===0)};
+}
+function buildNightOrder(){
+  var ids=shuffle(G.players.map(function(p){return p.id;}));
+  if(G.witnesses.length){
+    var idxs=G.witnesses.map(function(w){ return ids.indexOf(w); });
+    var minW=Math.min.apply(null,idxs);
+    var ti=ids.indexOf(G.thiefId);
+    if(ti>minW){ ids.splice(ti,1); ids.splice(rnd(minW+1),0,G.thiefId); }
+  }
+  return ids;
+}
+function othersOf(id){ return G.players.filter(function(p){return p.id!==id;}).map(function(p){return {id:p.id,name:p.name};}); }
+
+/* ---------- PACKET BUILDERS (ข้อมูลที่ผู้เล่นคนนั้น "รู้ได้จริง" เท่านั้น) ---------- */
+function pktPrivate(pid,kind){
+  var info=nightInfo(pid), lines=[], prompt=null;
+  if(kind==='night'){
+    lines.push({ic:'🕐',t:'คุณลืมตาขึ้นมาตอน '+hourTxt(info.hour)+' นาฬิกา'});
+    if(info.isThief){
+      lines.push({ic:'🧀',t:'คุณคือ “หนูขโมย” — คุณคว้าชีสก้อนใหญ่ไปซ่อนอย่างเงียบเชียบ',c:'warn'});
+      if(G.witnesses.length===1){
+        lines.push({ic:'👀',t:nameOf(G.witnesses[0])+' ลืมตาเห็นคุณ! เขากลายเป็น “สมุน” ของคุณโดยอัตโนมัติ',c:'warn'});
+      } else if(G.witnesses.length>1){
+        if(G.followerChosen){
+          lines.push({ic:'🤝',t:'คุณเลือก '+nameOf(G.followerId)+' เป็นสมุน (คนอื่นที่เห็นคุณจะไม่ใช่พวกคุณ)',c:'warn'});
+        } else {
+          prompt={kind:'follower',lbl:'มี '+G.witnesses.length+' คนลืมตาเห็นคุณ — เลือก 1 คนเป็น “สมุน”',
+                  opts:G.witnesses.map(function(w){return {id:w,name:nameOf(w)};})};
+        }
+      } else if(G.n>=6){
+        if(G.recruitDone){
+          lines.push({ic:'🤝',t:G.recruitId? ('คุณสะกิด '+nameOf(G.recruitId)+' ให้เป็นสมุน (เขาจะรู้ตอนเช้ามืด)') : 'คุณเลือกที่จะไม่สะกิดใครเลย'});
+        } else {
+          prompt={kind:'recruit',lbl:'ไม่มีใครเห็นคุณ — กติกา 6 คนขึ้นไป: หลังตี 6 คุณสะกิดใครก็ได้ 1 คนให้เป็นสมุน',
+                  opts:othersOf(pid).concat([{id:'__none',name:'ไม่สะกิดใคร'}])};
+        }
+      } else {
+        lines.push({ic:'🌙',t:'ไม่มีใครลืมตาเห็นคุณเลย — คุณรอดตัวในคืนนี้'});
+      }
+    } else if(info.sawTheft){
+      lines.push({ic:'😱',t:'คุณลืมตาขึ้นมาเห็น '+nameOf(G.thiefId)+' กำลังคว้าชีสไป!',c:'warn'});
+      var co=info.others.filter(function(x){return x!==G.thiefId;});
+      if(co.length) lines.push({ic:'👥',t:'และยังมี '+co.map(nameOf).join(', ')+' ลืมตาอยู่ด้วย (ห้ามส่งสัญญาณกัน)'});
+      if(G.followerId===pid) lines.push({ic:'🤫',t:'เขาสะกิดคุณ — คุณคือ “สมุน”! คุณจะชนะถ้าไม่มีใครจับหนูขโมยได้',c:'warn'});
+      else if(G.followerChosen||G.witnesses.length===1) lines.push({ic:'🙅',t:'แต่คุณไม่ได้ถูกเลือกเป็นสมุน — คุณยังเป็นหนูขี้เซาฝ่ายดี',c:'good'});
+    } else if(info.canInspect){
+      lines.push({ic:info.status==='there'?'🧀':'❌',
+        t:'คุณลืมตาขึ้นมาคนเดียว — ชีส'+(info.status==='there'?'ยังอยู่บนโต๊ะ':'หายไปแล้ว!'),
+        c:info.status==='there'?'':'warn'});
+      if(G.inspect[pid]){
+        lines.push({ic:'🔍',t:'คุณแอบดูลูกเต๋าของ '+nameOf(G.inspect[pid].target)+' → ได้เลข '+G.inspect[pid].value+' (เขาตื่น '+hourTxt(G.inspect[pid].value)+')',c:'good'});
+      } else {
+        prompt={kind:'inspect',lbl:'คุณตื่นคนเดียว จึงแอบดูลูกเต๋าของผู้เล่นอื่นได้ 1 คนเท่านั้น',opts:othersOf(pid)};
+      }
+    } else {
+      lines.push({ic:'👥',t:'คุณลืมตาพร้อมกับ '+info.others.map(nameOf).join(', ')+' — ห้ามส่งสัญญาณหรือแลกข้อมูลกัน'});
+      lines.push({ic:info.status==='there'?'🧀':'❌',
+        t:'ชีส'+(info.status==='there'?'ยังอยู่บนโต๊ะ':'หายไปแล้ว!'),c:info.status==='there'?'':'warn'});
+      lines.push({ic:'🚫',t:'คุณตื่นพร้อมคนอื่น จึงแอบดูลูกเต๋าไม่ได้'});
+    }
+  } else { // morning (6+ players)
+    lines.push({ic:'🌄',t:'เช้ามืด... บ้านหนูเงียบสนิท'});
+    if(pid===G.thiefId){
+      lines.push({ic:'🧀',t:'คุณซ่อนชีสไว้เรียบร้อยแล้ว'});
+      if(G.recruitId) lines.push({ic:'🤝',t:'คุณสะกิด '+nameOf(G.recruitId)+' ให้เป็นสมุนแล้ว',c:'warn'});
+      else if(G.followerId) lines.push({ic:'🤝',t:'สมุนของคุณคือ '+nameOf(G.followerId),c:'warn'});
+      else lines.push({ic:'🕵️',t:'คุณลุยเดี่ยว ไม่มีสมุน'});
+    } else if(pid===G.recruitId){
+      lines.push({ic:'👉',t:'มีมือเล็กๆ สะกิดคุณเบาๆ... คุณลืมตาขึ้นมาเห็น '+nameOf(G.thiefId)+' ยิ้มพร้อมชีสในมือ!',c:'warn'});
+      lines.push({ic:'🤫',t:'คุณคือ “สมุน” — คุณจะชนะก็ต่อเมื่อไม่มีใครจับหนูขโมยได้',c:'warn'});
+    } else if(pid===G.followerId){
+      lines.push({ic:'🤫',t:'คุณเป็นสมุนของ '+nameOf(G.thiefId)+' อยู่แล้ว เงียบไว้นะ',c:'warn'});
+    } else {
+      lines.push({ic:'💤',t:'คุณหลับสนิทจนสว่าง ไม่มีอะไรเกิดขึ้นกับคุณ'});
+    }
+  }
+  return {screen:'private',kind:kind,pid:pid,name:nameOf(pid),role:G.role[pid],die:G.die[pid],
+          lines:lines,prompt:prompt,timer:G.timerSec,
+          btn:(G.mode==='local'? (kind==='night'?'ส่งเครื่องให้คนถัดไป':'ส่งเครื่องให้คนถัดไป') : 'พร้อมแล้ว')};
+}
+function tRow(id){
+  var t=G.testimony[id]; if(!t) return null;
+  return {name:nameOf(id),hour:t.hour,saw:t.saw,
+          theftName:t.theftTarget?nameOf(t.theftTarget):null,
+          insName:t.insTarget?nameOf(t.insTarget):null,insVal:t.insVal||null};
+}
+function pktDiscuss(pid){
+  var board=G.tOrder.map(function(id){ return tRow(id); }).filter(function(x){return x;});
+  var turn=G.tOrder[G.ti]||null;
+  var isHost=(G.mode==='local')||(NET.isHost&&pid===NET.myId);
+  return {screen:'discuss',phase:G.dPhase,board:board,round:G.round,
+          turnId:turn,turnName:turn?nameOf(turn):'—',
+          isMyTurn:(G.dPhase==='testimony'&&turn===pid&&!byId(turn).isBot),
+          players:othersOf(pid),isHost:isHost};
+}
+function pktVote(pid){
+  var opts=G.voteCands.filter(function(x){return x!==pid;}).map(function(x){return {id:x,name:nameOf(x)};});
+  return {screen:'vote',pid:pid,name:nameOf(pid),opts:opts,runoff:G.isRunoff,timer:G.timerSec};
+}
+function tally(){
+  var c={}; G.voteCands.forEach(function(x){ c[x]=0; });
+  Object.keys(G.votes).forEach(function(v){ var t=G.votes[v]; if(c[t]!==undefined) c[t]++; });
+  var max=-1; Object.keys(c).forEach(function(k){ if(c[k]>max) max=c[k]; });
+  var top=Object.keys(c).filter(function(k){ return c[k]===max; });
+  return {counts:c,max:max,top:top};
+}
+function pktVoteReveal(){
+  var t=tally();
+  var rows=G.players.map(function(p){
+    return {from:p.name, to: G.votes[p.id]?nameOf(G.votes[p.id]):'—'};
+  });
+  var sum=Object.keys(t.counts).sort(function(a,b){return t.counts[b]-t.counts[a];})
+    .map(function(k){ return nameOf(k)+' : '+t.counts[k]; }).join('   ·   ');
+  return {screen:'votereveal',rows:rows,summary:sum,tie:(t.top.length>1)};
+}
+function pktResult(){
+  var caught = (G.accusedId===G.thiefId);
+  var thiefWin = !caught;
+  var rows=G.players.map(function(p){
+    var isFol=(p.id===G.followerId);
+    var win = thiefWin ? (p.id===G.thiefId||isFol) : (p.id!==G.thiefId&&!isFol);
+    return {name:p.name,role:G.role[p.id],die:G.die[p.id],fol:isFol,win:win,score:p.score};
+  });
+  return {screen:'result',thiefWin:thiefWin,thiefName:nameOf(G.thiefId),
+          folName:G.followerId?nameOf(G.followerId):null,
+          accusedName:G.accusedId?nameOf(G.accusedId):null,rows:rows};
+}
+
+/* =========================================================
+   5) BOT AI — ใช้เฉพาะข้อมูลที่ "บทบาทของตัวเอง" รู้ได้จริง
+   ========================================================= */
+function botLv(id){ return byId(id).level||G.level; }
+function botInspectTarget(pid){
+  var o=othersOf(pid).map(function(x){return x.id;});
+  return pick(o);
+}
+function botChooseFollower(){ return pick(G.witnesses); }
+function botRecruit(pid){
+  var lv=botLv(pid), o=othersOf(pid).map(function(x){return x.id;});
+  var p = lv==='easy'?0.6:(lv==='normal'?0.85:0.95);
+  return Math.random()<p ? pick(o) : null;
+}
+function claimedHours(){
+  var s={}; Object.keys(G.testimony).forEach(function(k){ s[G.testimony[k].hour]=true; }); return s;
+}
+function botTestimony(pid){
+  var info=nightInfo(pid), lv=botLv(pid);
+  var isThief=info.isThief, isFol=(pid===G.followerId);
+  var t={hour:info.hour,saw:'there',theftTarget:null,insTarget:null,insVal:null};
+
+  if(isThief || isFol){
+    var real=info.hour;
+    var cands=[1,2,3,4,5,6].filter(function(h){return h!==real;});
+    if(lv!=='easy'){
+      var used=claimedHours();
+      var fresh=cands.filter(function(h){return !used[h];});
+      if(fresh.length) cands=fresh;
+    }
+    t.hour=pick(cands);
+    if(isThief){
+      // โกหกให้ "สอดคล้อง": อ้างเวลาก่อนขโมย = ชีสยังอยู่ / หลังขโมย = ชีสหาย
+      t.saw = (t.hour < real) ? 'there' : 'gone';
+      if(lv==='easy' && Math.random()<0.4) t.saw = (Math.random()<0.5?'there':'gone');
+      if(lv==='hard' && Math.random()<0.28){
+        var vic=pick(othersOf(pid).map(function(x){return x.id;}));
+        t.insTarget=vic; t.insVal=t.hour===1?2:t.hour-1; // กุผลแอบดู
+      }
+    } else {
+      // สมุน: ปกปิดว่าตัวเองตื่นพร้อมขโมย
+      t.saw = (t.hour < real) ? 'there' : 'gone';
+      if(lv==='hard' && Math.random()<0.3){
+        var inno=othersOf(pid).map(function(x){return x.id;}).filter(function(x){return x!==G.thiefId;});
+        if(inno.length){ t.insTarget=pick(inno); t.insVal=1+rnd(6); }
+      }
+    }
+  } else {
+    t.hour=info.hour;
+    if(info.status==='theft'){ t.saw='theft'; t.theftTarget=G.thiefId; }
+    else t.saw=(info.status==='there')?'there':'gone';
+    var ins=G.inspect[pid];
+    if(ins){ t.insTarget=ins.target; t.insVal=ins.value; }
+  }
+  return t;
+}
+function botVote(pid,cands){
+  var info=nightInfo(pid), lv=botLv(pid);
+  var isThief=info.isThief, isFol=(pid===G.followerId);
+  var noise = lv==='easy'?9:(lv==='normal'?3:0.9);
+  var sc={};
+  cands.forEach(function(x){ if(x!==pid) sc[x]=1+Math.random()*noise; });
+  var keys=Object.keys(sc);
+  if(!keys.length) return pick(cands.filter(function(x){return x!==pid;})||cands);
+
+  var myCo = G.awake[info.hour]||[];           // legit: เห็นว่าใครลืมตาพร้อมตัวเอง
+  var myIns = G.inspect[pid]||null;            // legit: ผลแอบดูของตัวเอง
+
+  keys.forEach(function(x){
+    var tx=G.testimony[x];
+    if(!tx) return;
+    // 1) หลักฐานส่วนตัว
+    if(tx.hour===info.hour && myCo.indexOf(x)<0) sc[x]+= (lv==='easy'?8:46);
+    if(myCo.indexOf(x)>=0 && tx.hour!==info.hour) sc[x]+= (lv==='easy'?8:48);
+    if(myIns && myIns.target===x && tx.hour!==myIns.value) sc[x]+= (lv==='easy'?10:72);
+    if(tx.insTarget===pid && tx.insVal!==G.die[pid]) sc[x]+= (lv==='easy'?8:58);
+    // 2) หลักฐานสาธารณะ
+    if(tx.saw==='theft' && tx.theftTarget && sc[tx.theftTarget]!==undefined)
+      sc[tx.theftTarget]+= (lv==='easy'?12:40);
+  });
+
+  if(lv!=='easy'){
+    // ไทม์ไลน์: 'ยังอยู่' ที่ชม. h => ขโมยหลัง h ; 'หายแล้ว' ที่ชม. h => ขโมยก่อน h
+    var lastThere=0, firstGone=99;
+    Object.keys(G.testimony).forEach(function(k){
+      var t=G.testimony[k];
+      if(t.saw==='there') lastThere=Math.max(lastThere,t.hour);
+      if(t.saw==='gone') firstGone=Math.min(firstGone,t.hour);
+    });
+    if(firstGone<=lastThere){
+      keys.forEach(function(x){
+        var t=G.testimony[x]; if(!t) return;
+        if(t.saw==='there'&&t.hour>=firstGone) sc[x]+=18;
+        if(t.saw==='gone'&&t.hour<=lastThere) sc[x]+=18;
+      });
+    }
+    // คนที่อ้างชั่วโมงซ้ำกันแต่เล่าไม่ตรงกัน
+    keys.forEach(function(a){
+      var ta=G.testimony[a]; if(!ta) return;
+      keys.forEach(function(b){
+        if(a===b) return; var tb=G.testimony[b]; if(!tb) return;
+        if(ta.hour===tb.hour && ta.saw!==tb.saw){ sc[a]+=10; sc[b]+=10; }
+      });
+    });
+  }
+
+  // บทบาทของตัวเอง
+  if(info.sawTheft && !isFol && sc[G.thiefId]!==undefined) sc[G.thiefId]+=500;
+  if(isFol && sc[G.thiefId]!==undefined) sc[G.thiefId]-=500;
+  if(isThief){
+    if(G.followerId && sc[G.followerId]!==undefined) sc[G.followerId]-=120;
+    // ขโมยโหวตคนที่โดนสงสัยอยู่แล้ว เพื่อกลบตัวเอง
+    keys.forEach(function(x){
+      Object.keys(G.testimony).forEach(function(k){
+        var t=G.testimony[k];
+        if(t.saw==='theft'&&t.theftTarget===x&&x!==pid) sc[x]+=40;
+      });
+    });
+  }
+  var best=keys[0];
+  keys.forEach(function(x){ if(sc[x]>sc[best]) best=x; });
+  return best;
+}
+
+/* =========================================================
+   6) RENDER HELPERS
+   ========================================================= */
+var PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function drawDie(box,v){
+  var kids=box.children;
+  for(var i=0;i<9;i++){ if(kids[i]) kids[i].className=''; }
+  (PIPS[v]||[]).forEach(function(i){ if(kids[i]) kids[i].className='on'; });
+}
+function sawText(r){
+  if(r.saw==='there') return '🧀 ชีสยังอยู่';
+  if(r.saw==='gone') return '❌ ชีสหายแล้ว';
+  if(r.saw==='theft') return '😱 เห็น '+(r.theftName||'?')+' ขโมย';
+  return '—';
+}
+function renderBoard(board){
+  var b=$('dc-board'); clr(b);
+  if(!board.length){ b.appendChild(el('p','hint','ยังไม่มีใครให้ปากคำ')); return; }
+  board.forEach(function(r){
+    var row=el('div','trow');
+    row.appendChild(el('span','who','🐭 '+r.name));
+    row.appendChild(el('span',null,'ตื่น '+hourTxt(r.hour)));
+    row.appendChild(el('span',null,sawText(r)));
+    if(r.insName){ var s=el('span',null,'🔍 '+r.insName+'='+r.insVal); s.style.color='var(--mint)'; row.appendChild(s); }
+    b.appendChild(row);
+  });
+}
+
+/* =========================================================
+   7) LOCAL FLOW CONTROLLER
+   ========================================================= */
+var LQ={list:[],i:0,kind:'night'};
+var PV={step:0,pkt:null,sel:null,revealed:false};
+
+function localStartGame(){
+  startRound();
+  show('s-night'); // intro night ambience ก่อนเข้าสู่ตาลับ
+  runNightIntro(function(){ startNightPass(); });
+}
+function startNightPass(){
+  LQ={list:buildNightOrder(),i:0,kind:'night'};
+  nextPassTurn();
+}
+function nextPassTurn(){
+  if(LQ.i>=LQ.list.length){
+    if(LQ.kind==='night' && G.n>=6){
+      LQ={list:G.players.map(function(p){return p.id;}),i:0,kind:'morning'};
+      return nextPassTurn();
+    }
+    return goMorning();
+  }
+  var pid=LQ.list[LQ.i];
+  if(byId(pid).isBot){ return botPrivateTurn(pid,LQ.kind); }
+  $('ho-name').textContent=byId(pid).name;
+  $('ho-sub').textContent = (LQ.kind==='night')
+    ? 'คนอื่นห้ามแอบดูหน้าจอนะ 🤫 (ดูบทบาท + ลูกเต๋า + เหตุการณ์กลางคืน)'
+    : 'เช้ามืด: เช็กว่ามีใครมาสะกิดคุณหรือเปล่า 🤫';
+  show('s-handoff');
+}
+function botPrivateTurn(pid,kind){
+  $('bot-name').textContent=byId(pid).name;
+  $('bot-act').textContent = kind==='night'?'กำลังขยับในความมืด...':'กำลังลืมตาตอนเช้ามืด...';
+  show('s-bot'); AU.squeak();
+  setTimeout(function(){
+    if(kind==='night') botResolveNight(pid);
+    LQ.i++; nextPassTurn();
+  },900);
+}
+function botResolveNight(pid){
+  var info=nightInfo(pid);
+  if(info.isThief){
+    if(G.witnesses.length>1 && !G.followerChosen){ G.followerId=botChooseFollower(); G.followerChosen=true; }
+    else if(G.witnesses.length===0 && G.n>=6 && !G.recruitDone){
+      var r=botRecruit(pid); G.recruitId=r; if(r) G.followerId=r; G.recruitDone=true;
+    }
+  } else if(info.canInspect && !G.inspect[pid]){
+    var t=botInspectTarget(pid); G.inspect[pid]={target:t,value:G.die[t]};
+  }
+}
+function openPrivate(pid,kind){
+  G.localActor=pid;
+  applyPkt(pktPrivate(pid,kind));
+}
+
+/* ---------- private screen renderer (ใช้ร่วมกับโหมดออนไลน์) ---------- */
+function applyPkt(pkt){
+  if(!pkt){ return; }
+  if(pkt.screen==='private') return renderPrivate(pkt);
+  if(pkt.screen==='wait') return renderWait(pkt);
+  if(pkt.screen==='discuss') return renderDiscuss(pkt);
+  if(pkt.screen==='vote') return renderVote(pkt);
+  if(pkt.screen==='votereveal') return renderVoteReveal(pkt);
+  if(pkt.screen==='reveal') return renderReveal(pkt);
+  if(pkt.screen==='result') return renderResult(pkt);
+  if(pkt.screen==='night'){ show('s-night'); return runNightIntro(null); }
+  if(pkt.screen==='morning'){ show('s-morning'); return; }
+}
+function renderWait(p){
+  $('wt-title').textContent=p.title||'กำลังรอ...';
+  $('wt-sub').textContent=p.sub||'';
+  show('s-wait');
+}
+function renderPrivate(pkt){
+  PV.pkt=pkt; PV.sel=null; PV.revealed=false;
+  $('pv-name').textContent=pkt.name;
+  $('btn-pv-done').textContent=pkt.btn||'ต่อไป';
+  // role card reset
+  $('pv-card').classList.remove('flip');
+  var f=$('pv-face'); f.className='face front '+(pkt.role==='thief'?'thief':'sleepy');
+  $('pv-role-ic').textContent = pkt.role==='thief'?'🕵️‍♂️🧀':'🐭💤';
+  $('pv-role-nm').textContent = pkt.role==='thief'?'หนูขโมยชีส':'หนูขี้เซา';
+  $('pv-role-ds').textContent = pkt.role==='thief'
+    ? 'ขโมยชีสแล้วรอดจากการถูกโหวตให้ได้'
+    : 'ร่วมกันหาว่าใครคือหนูขโมย';
+  // die reset
+  $('pv-cup').style.display='block';
+  $('pv-die-wrap').style.display='none';
+  $('btn-pv-todie').disabled=true;
+  drawDie($('pv-die'),pkt.die);
+  $('pv-die-txt').textContent='คุณตื่นตอน '+hourTxt(pkt.die)+' นาฬิกา';
+  // night lines
+  renderNightLines(pkt);
+  PV.step = (pkt.kind==='night')?0:2;
+  showPvStep();
+  show('s-private');
+  timerStart(pkt.timer,'pv-bar','pv-sec',function(){ autoResolvePrivate(); });
+}
+function renderNightLines(pkt){
+  var box=$('pv-lines'); clr(box);
+  pkt.lines.forEach(function(l){
+    var d=el('div','line'+(l.c?' '+l.c:''));
+    d.appendChild(el('span','ic',l.ic));
+    d.appendChild(el('span',null,l.t));
+    box.appendChild(d);
+  });
+  var pr=$('pv-prompt'), opts=$('pv-prompt-opts'); clr(opts);
+  if(pkt.prompt){
+    pr.style.display='block';
+    $('pv-prompt-lbl').textContent=pkt.prompt.lbl;
+    $('btn-pv-done').disabled=true;
+    pkt.prompt.opts.forEach(function(o){
+      var b=el('button','ptile');
+      b.appendChild(el('span','mi',o.id==='__none'?'🚫':'🐭'));
+      b.appendChild(document.createTextNode(o.name));
+      b.addEventListener('click',function(){
+        AU.tap();
+        var all=opts.querySelectorAll('.ptile');
+        for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+        b.classList.add('sel'); PV.sel=o.id;
+        submitAction({type:'night',kind:pkt.prompt.kind,target:o.id});
+      });
+      opts.appendChild(b);
+    });
+  } else {
+    pr.style.display='none';
+    $('btn-pv-done').disabled=false;
+  }
+}
+function showPvStep(){
+  $('pv-step-role').style.display = PV.step===0?'flex':'none';
+  $('pv-step-die').style.display  = PV.step===1?'flex':'none';
+  $('pv-step-night').style.display= PV.step===2?'flex':'none';
+  $('btn-pv-done').style.display  = PV.step===2?'block':'none';
+}
+function autoResolvePrivate(){
+  var pkt=PV.pkt; if(!pkt) return;
+  if(pkt.prompt && !PV.sel){
+    var o=pkt.prompt.opts.filter(function(x){return x.id!=='__none';});
+    var t=o.length?pick(o).id:'__none';
+    submitAction({type:'night',kind:pkt.prompt.kind,target:t});
+    toast('หมดเวลา — ระบบเลือกให้อัตโนมัติ');
+  }
+  setTimeout(function(){ finishPrivate(); },450);
+}
+function finishPrivate(){
+  timerStop();
+  if(G.mode==='local'){ LQ.i++; nextPassTurn(); }
+  else { submitAction({type:'ready'}); renderWait({title:'รอเพื่อนๆ',sub:'ผู้เล่นคนอื่นกำลังดูข้อมูลลับของตัวเอง 🤫'}); }
+}
+
+/* ---------- action router ---------- */
+function myActingId(){
+  if(G.mode==='local') return G.localActor;
+  return NET.myId;
+}
+function submitAction(a){
+  if(G.mode==='online' && !NET.isHost){
+    try{ NET.hostConn && NET.hostConn.send({t:'act',a:a}); }catch(e){ fail('ส่งข้อมูลไม่สำเร็จ'); }
+    return;
+  }
+  hostHandleAction(myActingId(),a);
+}
+function hostHandleAction(pid,a){
+  if(!pid||!a) return;
+  if(a.type==='night'){
+    var info=nightInfo(pid);
+    if(a.kind==='inspect' && info.canInspect && !G.inspect[pid] && a.target!=='__none' && G.pmap[a.target]){
+      G.inspect[pid]={target:a.target,value:G.die[a.target]}; AU.squeak();
+    } else if(a.kind==='follower' && pid===G.thiefId && !G.followerChosen && G.witnesses.indexOf(a.target)>=0){
+      G.followerId=a.target; G.followerChosen=true; AU.steal();
+    } else if(a.kind==='recruit' && pid===G.thiefId && !G.recruitDone){
+      G.recruitId = (a.target==='__none')?null:a.target;
+      if(G.recruitId) G.followerId=G.recruitId;
+      G.recruitDone=true; AU.steal();
+    }
+    if(G.mode==='local'){ renderNightLines(pktPrivate(pid,'night')); }
+    else { netEmit(); }
+    return;
+  }
+  if(a.type==='ready'){ G.ready[pid]=true; netCheckStage(); return; }
+  if(a.type==='testimony'){
+    if(G.tOrder[G.ti]!==pid) return;
+    G.testimony[pid]=a.t; G.ti++;
+    if(G.mode==='local') localDiscussStep(); else { netEmit(); netDiscussStep(); }
+    return;
+  }
+  if(a.type==='vote'){
+    if(G.votes[pid]) return;
+    G.votes[pid]=a.target; AU.tap();
+    if(G.mode==='local'){ /* local flow จัดการเอง */ }
+    else { netEmit(); netCheckVotes(); }
+    return;
+  }
+  if(a.type==='gotoVote'){ if(G.dPhase!=='free') return; startVote(null); return; }
+  if(a.type==='next'){ netNextStage(); return; }
+}
+
+/* =========================================================
+   8) NIGHT ANIMATION
+   ========================================================= */
+var NAT=null;
+function runNightIntro(done){
+  var tl=$('na-tl'); clr(tl);
+  for(var h=1;h<=6;h++){ var d=el('div','h','ตี '+h); d.id='na-h'+h; tl.appendChild(d); }
+  $('na-cheese').className=''; $('na-cheese').textContent='🧀';
+  var h=1;
+  if(NAT) clearInterval(NAT);
+  $('na-hour').textContent='ตี 1';
+  function step(){
+    for(var k=1;k<=6;k++){
+      var e=$('na-h'+k); if(!e) continue;
+      e.classList.toggle('now',k===h); e.classList.toggle('past',k<h);
+    }
+    $('na-hour').textContent='ตี '+h;
+    AU.tick();
+    h++;
+    if(h>6){
+      clearInterval(NAT); NAT=null;
+      setTimeout(function(){
+        $('na-cheese').className='gone'; AU.steal();
+        setTimeout(function(){ if(done) done(); else goMorningScreenOnly(); },1100);
+      },600);
+    }
+  }
+  step(); NAT=setInterval(step,900);
+}
+function goMorningScreenOnly(){ show('s-morning'); }
+function goMorning(){
+  show('s-night');
+  runNightIntro(function(){ AU.chime(); show('s-morning'); });
+}
+
+/* =========================================================
+   9) DISCUSSION / TESTIMONY
+   ========================================================= */
+var DT={hour:null,saw:null,target:null,ins:false,insP:null,insV:null};
+var FREE_T=null, freeLeft=120;
+
+function startDiscussion(){
+  var ids=G.players.map(function(p){return p.id;});
+  var s=rnd(ids.length);
+  G.tOrder=ids.slice(s).concat(ids.slice(0,s));
+  G.ti=0; G.dPhase='testimony'; G.testimony={};
+  if(G.mode==='local') localDiscussStep(); else { netEmit(); netDiscussStep(); }
+}
+function localDiscussStep(){
+  if(G.ti>=G.tOrder.length){
+    G.dPhase='free'; startFreeTimer(); applyPkt(pktDiscuss(G.players[0].id)); return;
+  }
+  var pid=G.tOrder[G.ti];
+  applyPkt(pktDiscuss(pid));
+  if(byId(pid).isBot){
+    setTimeout(function(){
+      if(G.tOrder[G.ti]!==pid) return;
+      G.testimony[pid]=botTestimony(pid); G.ti++; AU.squeak(); localDiscussStep();
+    },1000);
+  }
+}
+function resetDT(){
+  DT={hour:null,saw:null,target:null,ins:false,insP:null,insV:null};
+  var c=$('dc-hours').querySelectorAll('.chip'); for(var i=0;i<c.length;i++) c[i].classList.remove('sel');
+  var s=$('dc-saw').querySelectorAll('.chip'); for(var j=0;j<s.length;j++) s[j].classList.remove('sel');
+  $('dc-target-wrap').style.display='none';
+  $('dc-ins-wrap').style.display='none';
+  $('dc-ins-toggle').classList.remove('sel');
+}
+function renderDiscuss(p){
+  $('dc-round').textContent='รอบ '+p.round;
+  renderBoard(p.board);
+  $('dc-turn').textContent=p.turnName;
+  var testimonyMode=(p.phase==='testimony');
+  $('dc-controls').style.display = (testimonyMode && p.isMyTurn)?'flex':'none';
+  $('dc-free').style.display = (p.phase==='free')?'flex':'none';
+  $('dc-wait').style.display = (testimonyMode && !p.isMyTurn)?'block':'none';
+  if(testimonyMode && !p.isMyTurn) $('dc-wait').textContent='⏳ รอ '+p.turnName+' ให้ปากคำ...';
+  if(p.phase==='free'){
+    $('btn-dc-vote').disabled = !p.isHost;
+    $('btn-dc-vote').textContent = p.isHost?'🗳️ ไปโหวตเลย':'รอเจ้าบ้านเริ่มโหวต';
+  }
+  if(testimonyMode && p.isMyTurn){
+    resetDT();
+    var tg=$('dc-target'); clr(tg);
+    var ip=$('dc-ins-p'); clr(ip);
+    p.players.forEach(function(o){
+      var b=el('button','chip sm',o.name);
+      b.addEventListener('click',function(){
+        var all=tg.querySelectorAll('.chip'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+        b.classList.add('sel'); DT.target=o.id; AU.tap();
+      });
+      tg.appendChild(b);
+      var b2=el('button','chip sm',o.name);
+      b2.addEventListener('click',function(){
+        var all=ip.querySelectorAll('.chip'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+        b2.classList.add('sel'); DT.insP=o.id; AU.tap();
+      });
+      ip.appendChild(b2);
+    });
+  }
+  show('s-discuss');
+}
+function startFreeTimer(){
+  freeLeft=120; updateFree();
+  if(FREE_T) clearInterval(FREE_T);
+  FREE_T=setInterval(function(){
+    freeLeft--; updateFree();
+    if(freeLeft<=0){ clearInterval(FREE_T); FREE_T=null; if(G.mode==='local'||NET.isHost) startVote(null); }
+  },1000);
+}
+function updateFree(){
+  var m=Math.floor(freeLeft/60),s=freeLeft%60;
+  var e=$('dc-clock'); if(e) e.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+}
+
+/* =========================================================
+   10) VOTE
+   ========================================================= */
+var VQ={list:[],i:0};
+function startVote(cands){
+  if(FREE_T){ clearInterval(FREE_T); FREE_T=null; }
+  G.voteCands = cands || G.players.map(function(p){return p.id;});
+  G.votes={};
+  G.players.forEach(function(p){
+    if(p.isBot){
+      var c=G.voteCands.filter(function(x){return x!==p.id;});
+      if(c.length) G.votes[p.id]=botVote(p.id,G.voteCands);
+    }
+  });
+  if(G.mode==='local'){
+    VQ={list:G.players.filter(function(p){return !p.isBot;}).map(function(p){return p.id;}),i:0};
+    nextVoteTurn();
+  } else {
+    G.stage='vote'; netEmit(); netCheckVotes();
+  }
+}
+function nextVoteTurn(){
+  if(VQ.i>=VQ.list.length){ return finishVote(); }
+  var pid=VQ.list[VQ.i];
+  $('ho-name').textContent=byId(pid).name;
+  $('ho-sub').textContent='ถึงตาโหวตแล้ว — ห้ามให้คนอื่นเห็นว่าคุณกดใคร 🤫';
+  G.localActor=pid;
+  show('s-handoff');
+}
+function renderVote(p){
+  $('vt-name').textContent=p.name;
+  $('vt-hint').textContent = p.runoff
+    ? '🔁 โหวตรอบตัดสิน! เลือกจากผู้ที่คะแนนเท่ากันเท่านั้น'
+    : 'เลือกคนที่คุณคิดว่าเป็นหนูขโมย — ทุกคนโหวตพร้อมกัน';
+  var g=$('vt-grid'); clr(g);
+  var sel=null;
+  $('btn-vt-confirm').disabled=true;
+  p.opts.forEach(function(o){
+    var b=el('button','ptile');
+    b.appendChild(el('span','mi','🐭'));
+    b.appendChild(document.createTextNode(o.name));
+    b.addEventListener('click',function(){
+      AU.tap();
+      var all=g.querySelectorAll('.ptile'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+      b.classList.add('sel'); sel=o.id; $('btn-vt-confirm').disabled=false;
+      $('btn-vt-confirm').setAttribute('data-sel',o.id);
+    });
+    g.appendChild(b);
+  });
+  show('s-vote');
+  timerStart(p.timer,'vt-bar',null,function(){
+    var s=$('btn-vt-confirm').getAttribute('data-sel');
+    if(!s && p.opts.length) s=pick(p.opts).id;
+    if(s) doVote(s);
+  });
+}
+function doVote(target){
+  timerStop();
+  $('btn-vt-confirm').removeAttribute('data-sel');
+  if(G.mode==='local'){
+    G.votes[G.localActor]=target; AU.tap();
+    VQ.i++; nextVoteTurn();
+  } else {
+    submitAction({type:'vote',target:target});
+    renderWait({title:'โหวตแล้ว!',sub:'รอผู้เล่นคนอื่นโหวตให้ครบ 🗳️'});
+  }
+}
+function finishVote(){
+  var t=tally();
+  if(t.top.length>1 && !G.isRunoff){
+    G.isRunoff=true;
+    showVoteReveal(function(){
+      toast('คะแนนเสมอ! โหวตรอบตัดสินระหว่าง '+t.top.map(nameOf).join(' / '));
+      startVote(t.top);
+    },true);
+    return;
+  }
+  if(t.top.length>1 && G.isRunoff){
+    G.accusedId=null;
+    showVoteReveal(function(){ goResultNoAccused(); },true);
+    return;
+  }
+  G.accusedId=t.top[0];
+  showVoteReveal(function(){ goReveal(); },false);
+}
+function showVoteReveal(next,tie){
+  var p=pktVoteReveal();
+  renderVoteReveal(p);
+  $('btn-vr-next').textContent = tie?'ดูผลถัดไป':'เปิดการ์ด 🔎';
+  VR_NEXT=next;
+}
+var VR_NEXT=null;
+function renderVoteReveal(p){
+  var l=$('vr-list'); clr(l);
+  p.rows.forEach(function(r){
+    var row=el('div','trow');
+    row.appendChild(el('span','who','🐭 '+r.from));
+    row.appendChild(el('span',null,'➜'));
+    var b=el('b',null,r.to); row.appendChild(b);
+    l.appendChild(row);
+  });
+  $('vr-summary').textContent=p.summary;
+  show('s-votereveal'); AU.chime();
+}
+
+/* =========================================================
+   11) REVEAL + RESULT
+   ========================================================= */
+function goReveal(){
+  var pid=G.accusedId;
+  var p={screen:'reveal',name:nameOf(pid),role:G.role[pid],fol:(pid===G.followerId)};
+  renderReveal(p);
+}
+function renderReveal(p){
+  $('rv-name').textContent=p.name;
+  $('rv-card').classList.remove('flip');
+  $('btn-rv-next').disabled=true;
+  var f=$('rv-face'); f.className='face front '+(p.role==='thief'?'thief':'sleepy');
+  $('rv-ic').textContent = p.role==='thief'?'🕵️‍♂️🧀':'🐭💤';
+  $('rv-nm').textContent = p.role==='thief'?'หนูขโมยชีส!':'หนูขี้เซา';
+  $('rv-ds').textContent = p.role==='thief'?'ชีสอยู่ในกระเป๋าเขาเอง!':'ไม่ใช่คนร้าย... ชีสยังหายอยู่';
+  show('s-reveal');
+}
+function goResultNoAccused(){
+  G.accusedId=null; applyResult();
+}
+function applyResult(){
+  var caught=(G.accusedId===G.thiefId);
+  var thiefWin=!caught;
+  G.players.forEach(function(p){
+    var isFol=(p.id===G.followerId);
+    var w = thiefWin ? (p.id===G.thiefId||isFol) : (p.id!==G.thiefId&&!isFol);
+    if(w) p.score=(p.score||0)+1;
+  });
+  G.lastResult=pktResult();
+  if(G.mode==='online'&&NET.isHost){ G.stage='result'; netEmit(); }
+  renderResult(G.lastResult);
+}
+function renderResult(p){
+  $('rs-ic').textContent = p.thiefWin?'🧀😈':'🔦🐭';
+  $('rs-title').textContent = p.thiefWin?'หนูขโมยชนะ!':'เหล่าหนูขี้เซาชนะ!';
+  var sub = p.accusedName? ('ผู้ถูกโหวต: '+p.accusedName+' · ') : 'คะแนนเสมอซ้ำ — หนูขโมยหนีไปในความสับสน · ';
+  sub += 'หนูขโมยคือ '+p.thiefName + (p.folName? (' · สมุนคือ '+p.folName):' · ไม่มีสมุน');
+  $('rs-sub').textContent=sub;
+  var t=$('rs-table'); clr(t);
+  p.rows.forEach(function(r){
+    var tr=el('tr');
+    tr.appendChild(el('td',null,'🐭 '+r.name));
+    var td2=el('td');
+    var b=el('span','badge '+(r.role==='thief'?'thief':'sleepy'), r.role==='thief'?'หนูขโมย':'หนูขี้เซา');
+    td2.appendChild(b);
+    if(r.fol){ td2.appendChild(document.createTextNode(' ')); td2.appendChild(el('span','badge fol','สมุน')); }
+    tr.appendChild(td2);
+    tr.appendChild(el('td',null,'🎲 '+r.die));
+    tr.appendChild(el('td',r.win?'win':'lose', r.win?'ชนะ':'แพ้'));
+    tr.appendChild(el('td',null,'⭐'+(r.score||0)));
+    t.appendChild(tr);
+  });
+  show('s-result');
+  if(p.thiefWin) AU.lose(); else AU.win();
+}
+
+/* =========================================================
+   12) ONLINE (P2P via PeerJS) — host-authoritative
+   ========================================================= */
+var NET={peer:null,isHost:false,conns:{},myId:null,code:null,hostConn:null,peerToPid:{}};
+function randCode(){
+  var s='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',o='';
+  for(var i=0;i<5;i++) o+=s.charAt(rnd(s.length));
+  return o;
+}
+function netAvailable(){ return typeof window.Peer !== 'undefined'; }
+function netHost(name){
+  if(!netAvailable()){ toast('โหลดไลบรารีออนไลน์ไม่สำเร็จ — ลองเช็กอินเทอร์เน็ต'); return; }
+  var code=randCode();
+  try{ NET.peer=new window.Peer('cheesethief-'+code,{debug:0}); }
+  catch(e){ fail('สร้างห้องไม่สำเร็จ: '+e.message); return; }
+  NET.peer.on('open',function(){
+    NET.isHost=true; NET.code=code; G.mode='online';
+    G.players=[{id:'p0',name:name||'เจ้าบ้าน',isBot:false,score:0}];
+    NET.myId='p0'; rebuildMap();
+    $('lobby-code').textContent=code;
+    renderLobby(); show('s-lobby');
+  });
+  NET.peer.on('connection',function(c){
+    c.on('open',function(){ NET.conns[c.peer]=c; });
+    c.on('data',function(m){ hostOnData(c,m); });
+    c.on('close',function(){ delete NET.conns[c.peer]; });
+    c.on('error',function(){});
+  });
+  NET.peer.on('error',function(e){
+    if(e && e.type==='unavailable-id'){ netHost(name); }
+    else fail('เครือข่าย: '+(e&&e.type||'error'));
+  });
+}
+function netJoin(name,code){
+  if(!netAvailable()){ toast('โหลดไลบรารีออนไลน์ไม่สำเร็จ'); return; }
+  if(!code||code.length<4){ toast('ใส่รหัสห้องให้ครบ'); return; }
+  try{ NET.peer=new window.Peer({debug:0}); }catch(e){ fail('เชื่อมต่อไม่สำเร็จ'); return; }
+  G.mode='online'; NET.isHost=false;
+  NET.peer.on('open',function(){
+    var c=NET.peer.connect('cheesethief-'+code.toUpperCase(),{reliable:true});
+    NET.hostConn=c;
+    c.on('open',function(){ c.send({t:'join',name:name||'ผู้เล่น'}); toast('เชื่อมต่อแล้ว'); });
+    c.on('data',function(m){ clientOnData(m); });
+    c.on('error',function(){ toast('เชื่อมต่อห้องไม่ได้'); });
+    c.on('close',function(){ toast('หลุดจากห้อง'); });
+  });
+  NET.peer.on('error',function(e){ toast('เชื่อมต่อไม่ได้: '+(e&&e.type||'')); });
+}
+function hostOnData(c,m){
+  if(!m||!m.t) return;
+  if(m.t==='join'){
+    if(G.players.length>=8){ c.send({t:'msg',x:'ห้องเต็มแล้ว'}); return; }
+    if(G.round>0){ c.send({t:'msg',x:'เกมเริ่มไปแล้ว'}); return; }
+    var pid='p'+G.players.length;
+    G.players.push({id:pid,name:(m.name||'ผู้เล่น').slice(0,12),isBot:false,score:0,peer:c.peer});
+    NET.peerToPid[c.peer]=pid; rebuildMap();
+    c.send({t:'you',id:pid,code:NET.code});
+    netLobbyBroadcast(); renderLobby();
+    return;
+  }
+  if(m.t==='act'){
+    var pid2=NET.peerToPid[c.peer];
+    if(pid2) hostHandleAction(pid2,m.a);
+  }
+}
+function clientOnData(m){
+  if(!m||!m.t) return;
+  if(m.t==='you'){ NET.myId=m.id; $('lobby-code').textContent=m.code||'-----'; show('s-lobby'); return; }
+  if(m.t==='lobby'){
+    G.players=m.players; rebuildMap(); renderLobby();
+    if(CUR!=='s-lobby'&&m.phase==='lobby') show('s-lobby');
+    return;
+  }
+  if(m.t==='pkt'){ applyPkt(m.pkt); return; }
+  if(m.t==='msg'){ toast(m.x); return; }
+}
+function netLobbyBroadcast(){
+  var payload={t:'lobby',phase:(G.round>0?'game':'lobby'),
+    players:G.players.map(function(p){return {id:p.id,name:p.name,isBot:!!p.isBot,score:p.score||0};})};
+  Object.keys(NET.conns).forEach(function(k){ try{ NET.conns[k].send(payload); }catch(e){} });
+}
+function netSendTo(pid,pkt){
+  var p=byId(pid);
+  if(pid===NET.myId){ applyPkt(pkt); return; }
+  if(p.peer && NET.conns[p.peer]){ try{ NET.conns[p.peer].send({t:'pkt',pkt:pkt}); }catch(e){} }
+}
+function netEmit(){
+  if(G.mode!=='online'||!NET.isHost) return;
+  G.players.forEach(function(p){
+    if(p.isBot) return;
+    netSendTo(p.id, netPktFor(p.id));
+  });
+}
+function netPktFor(pid){
+  switch(G.stage){
+    case 'thief':
+      if(pid===G.thiefId) return pktPrivate(pid,'night');
+      return {screen:'wait',title:'🌙 ทุกคนกำลังหลับ',sub:'นาฬิกาเดินไปเรื่อยๆ... รอสักครู่'};
+    case 'night':
+      if(G.ready[pid]) return {screen:'wait',title:'รอเพื่อนๆ',sub:'ผู้เล่นคนอื่นกำลังดูข้อมูลลับ 🤫'};
+      return pktPrivate(pid,'night');
+    case 'morning':
+      if(G.ready[pid]) return {screen:'wait',title:'รอเพื่อนๆ',sub:'เช้ามืดกำลังผ่านไป...'};
+      return pktPrivate(pid,'morning');
+    case 'anim': return {screen:'night'};
+    case 'dawn': return {screen:'morning'};
+    case 'discuss': return pktDiscuss(pid);
+    case 'vote':
+      if(G.votes[pid]) return {screen:'wait',title:'โหวตแล้ว!',sub:'รอผู้เล่นคนอื่นโหวตให้ครบ 🗳️'};
+      return pktVote(pid);
+    case 'votereveal': return pktVoteReveal();
+    case 'reveal': return {screen:'reveal',name:nameOf(G.accusedId),role:G.role[G.accusedId]};
+    case 'result': return G.lastResult||pktResult();
+  }
+  return {screen:'wait',title:'กำลังโหลด...',sub:''};
+}
+function netStartGame(){
+  startRound();
+  G.stage='thief'; G.ready={};
+  netEmit();
+  if(byId(G.thiefId).isBot){
+    setTimeout(function(){ botResolveNight(G.thiefId); G.stage='night'; G.ready[G.thiefId]=true; netEmit(); },1200);
+  }
+}
+function netCheckStage(){
+  if(G.mode!=='online'||!NET.isHost) return;
+  if(G.stage==='thief'){
+    if(G.ready[G.thiefId]){ G.stage='night'; netEmit(); netAutoBotsNight(); }
+    return;
+  }
+  if(G.stage==='night'){
+    var all=G.players.every(function(p){ return p.isBot||G.ready[p.id]; });
+    if(all){
+      G.ready={};
+      if(G.n>=6){ G.stage='morning'; netEmit(); netAutoBotsReady(); }
+      else netGoAnim();
+    }
+    return;
+  }
+  if(G.stage==='morning'){
+    var all2=G.players.every(function(p){ return p.isBot||G.ready[p.id]; });
+    if(all2){ G.ready={}; netGoAnim(); }
+    return;
+  }
+}
+function netAutoBotsNight(){
+  G.players.forEach(function(p){
+    if(p.isBot && p.id!==G.thiefId){ botResolveNight(p.id); G.ready[p.id]=true; }
+  });
+  if(byId(G.thiefId).isBot) G.ready[G.thiefId]=true;
+  netCheckStage();
+}
+function netAutoBotsReady(){
+  G.players.forEach(function(p){ if(p.isBot) G.ready[p.id]=true; });
+  netCheckStage();
+}
+function netGoAnim(){
+  G.stage='anim'; netEmit(); show('s-night'); runNightIntro(function(){
+    G.stage='dawn'; netEmit(); show('s-morning');
+  });
+}
+function netDiscussStep(){
+  if(G.ti>=G.tOrder.length){ G.dPhase='free'; startFreeTimer(); netEmit(); return; }
+  var pid=G.tOrder[G.ti];
+  if(byId(pid).isBot){
+    setTimeout(function(){
+      if(G.tOrder[G.ti]!==pid) return;
+      G.testimony[pid]=botTestimony(pid); G.ti++; netEmit(); netDiscussStep();
+    },1100);
+  }
+}
+function netCheckVotes(){
+  var all=G.players.every(function(p){ return !!G.votes[p.id]; });
+  if(!all) return;
+  var t=tally();
+  if(t.top.length>1 && !G.isRunoff){
+    G.isRunoff=true; G.stage='votereveal'; netEmit(); showVoteReveal(function(){ startVote(t.top); },true); return;
+  }
+  if(t.top.length>1){ G.accusedId=null; G.stage='votereveal'; netEmit(); showVoteReveal(function(){ applyResult(); },true); return; }
+  G.accusedId=t.top[0]; G.stage='votereveal'; netEmit();
+  showVoteReveal(function(){ G.stage='reveal'; netEmit(); goReveal(); },false);
+}
+function netNextStage(){}
+
+function renderLobby(){
+  var box=$('lobby-players'); clr(box);
+  G.players.forEach(function(p){
+    var d=el('div','ptile');
+    d.appendChild(el('span','mi',p.isBot?'🤖':'🐭'));
+    d.appendChild(document.createTextNode(p.name));
+    box.appendChild(d);
+  });
+  var ok=(G.players.length>=4&&G.players.length<=8);
+  $('lobby-msg').textContent = NET.isHost
+    ? (ok?'พร้อมเริ่มได้! ('+G.players.length+' คน)':'ต้องมีผู้เล่น 4–8 คน (ตอนนี้ '+G.players.length+') เพิ่มบอทได้')
+    : 'รอเจ้าบ้านเริ่มเกม... ('+G.players.length+' คน)';
+  $('btn-lobby-start').style.display=NET.isHost?'block':'none';
+  $('btn-lobby-bot').style.display=NET.isHost?'block':'none';
+  $('btn-lobby-start').disabled=!ok;
+}
+
+/* =========================================================
+   13) SETUP SCREEN (local)
+   ========================================================= */
+var SETUP={count:5,names:[],bots:[]};
+var DEF_NAMES=['ต้อม','แก้ม','โบว์','ปอ','นัท','มิ้นท์','ก้อง','ฟ้า'];
+function buildSetupList(){
+  var box=$('setup-list'); clr(box);
+  for(var i=0;i<SETUP.count;i++){
+    (function(i){
+      var card=el('div','card');
+      var r=el('div','row');
+      r.appendChild(el('span','mi',SETUP.bots[i]?'🤖':'🐭')).style.fontSize='20px';
+      var inp=el('input'); inp.type='text'; inp.maxLength=12;
+      inp.value=SETUP.names[i]||DEF_NAMES[i];
+      inp.style.flex='1';
+      inp.addEventListener('input',function(){ SETUP.names[i]=inp.value; });
+      SETUP.names[i]=inp.value;
+      r.appendChild(inp);
+      var b=el('button','chip sm',SETUP.bots[i]?'บอท':'คน');
+      if(SETUP.bots[i]) b.classList.add('sel');
+      b.addEventListener('click',function(){
+        SETUP.bots[i]=!SETUP.bots[i]; AU.tap(); buildSetupList();
+      });
+      r.appendChild(b);
+      card.appendChild(r);
+      box.appendChild(card);
+    })(i);
+  }
+}
+function setCount(n){
+  SETUP.count=Math.max(4,Math.min(8,n));
+  $('pc-val').textContent=SETUP.count;
+  while(SETUP.bots.length<SETUP.count) SETUP.bots.push(false);
+  buildSetupList();
+}
+
+/* =========================================================
+   14) RULES TEXT
+   ========================================================= */
+var RULES=[
+ ['🧀 เป้าหมาย','ผู้เล่น 4–8 คน · มี “หนูขโมยชีส” 1 คน ที่เหลือเป็น “หนูขี้เซา” ฝ่ายดี หนูขี้เซาต้องช่วยกันโหวตจับหนูขโมยให้ได้ ส่วนหนูขโมย (และสมุน) ชนะถ้ารอดจากการถูกโหวต'],
+ ['🎲 เตรียมเกม','ทุกคนได้การ์ดบทบาทลับ 1 ใบ และทอยลูกเต๋าลับ 1 ลูก เลข 1–6 คือ “เวลาที่คุณจะลืมตา” (ตี 1 – ตี 6) ไม่มีใครเห็นของคนอื่น'],
+ ['🌙 กลางคืน','เกมจะขานเวลาตี 1 → ตี 6 คุณจะลืมตาเฉพาะตอนที่เลขของคุณถูกขาน สิ่งที่คุณเห็นคือ ชีสยังอยู่ / ชีสหายไปแล้ว / หรือเห็นคนกำลังขโมย'],
+ ['🕵️ หนูขโมย','เมื่อถึงเวลาของหนูขโมย เขาจะคว้าชีสไปซ่อนทันที (ไม่ว่าจะมีใครเห็นหรือไม่)'],
+ ['🔍 แอบดูลูกเต๋า','หนูขี้เซาที่ลืมตา “คนเดียว” ในชั่วโมงนั้น แอบดูลูกเต๋าของผู้เล่นอื่นได้ 1 คนเท่านั้น ถ้าตื่นพร้อมคนอื่นจะแอบดูไม่ได้ และห้ามส่งสัญญาณ/แลกข้อมูลกันเด็ดขาด'],
+ ['🤝 สมุน (Follower)','หนูขี้เซาที่ลืมตาพร้อมหนูขโมยจะ “เห็นเหตุการณ์” และกลายเป็นสมุน — ชนะพร้อมหนูขโมย ถ้ามีคนเห็นหลายคน หนูขโมยเป็นผู้เลือกว่าใครจะเป็นสมุน (คนที่ไม่ถูกเลือกยังเป็นฝ่ายดี)'],
+ ['👥 กติกาเพิ่ม 6 คนขึ้นไป','ถ้าเล่น 6 คนขึ้นไป และไม่มีใครเห็นการขโมยเลย หลังตี 6 หนูขโมยสามารถ “สะกิด” ผู้เล่น 1 คนให้เป็นสมุนได้ ผู้ถูกสะกิดจะรู้ว่าใครคือหนูขโมย (เกมนี้จำกัดสมุนสูงสุด 1 คน)'],
+ ['🗣️ ถกเถียง','ตอนเช้า ทุกคนให้ปากคำว่าตื่นตอนไหนและเห็นอะไร จะพูดจริงหรือโกหกก็ได้ แต่ห้ามโชว์การ์ดหรือลูกเต๋าจริงให้ใครเห็น'],
+ ['🗳️ โหวต','ทุกคนโหวตพร้อมกัน (โหวตตัวเองไม่ได้) คนที่ได้คะแนนสูงสุดจะเปิดการ์ด — ถ้าเป็นหนูขโมย ฝ่ายหนูขี้เซาชนะ (สมุนแพ้ด้วย) ถ้าไม่ใช่ หนูขโมยและสมุนชนะ'],
+ ['🔁 คะแนนเสมอ','ถ้าคะแนนสูงสุดเสมอกัน จะโหวตรอบตัดสินเฉพาะคนที่เสมอ ถ้ายังเสมออีก ถือว่าจับไม่ได้ → หนูขโมยชนะ'],
+ ['🔒 ความลับ','เกมนี้ทำหน้าที่เป็นผู้ดำเนินเกมเอง ไม่มีใครเห็นข้อมูลลับของคนอื่น และบอทจะใช้เฉพาะข้อมูลที่บทบาทของมันรู้ได้จริงเท่านั้น']
+];
+function buildRules(){
+  var b=$('rules-body'); clr(b);
+  RULES.forEach(function(r){
+    var h=el('div',null,r[0]); h.style.fontWeight='800'; h.style.marginTop='10px'; h.style.color='var(--cheese)';
+    var p=el('p','small',r[1]); p.style.margin='4px 0 0'; p.style.color='#dfe3ff';
+    b.appendChild(h); b.appendChild(p);
+  });
+}
+
+/* =========================================================
+   15) WIRE UP
+   ========================================================= */
+function wire(){
+  // topbar
+  on('btn-sfx',function(){ AU.sfx=!AU.sfx; $('btn-sfx').classList.toggle('off',!AU.sfx); if(AU.sfx) AU.tap(); });
+  on('btn-music',function(){
+    AU.init(); var v=!AU.music; AU.toggleMusic(v); $('btn-music').classList.toggle('off',!v);
+    toast(v?'เปิดเพลงบรรยากาศ 🎵':'ปิดเพลง');
+  });
+  on('btn-help',function(){ AU.tap(); show('s-rules'); });
+  on('btn-rules-back',function(){ AU.tap(); show(G.round>0?CUR:'s-home'); show('s-home'); });
+
+  // home
+  on('btn-go-local',function(){ AU.init(); AU.tap(); G.mode='local'; setCount(SETUP.count); show('s-setup'); });
+  on('btn-go-online',function(){ AU.init(); AU.tap();
+    if(!netAvailable()) $('on-msg').textContent='⚠ โหลดไลบรารี P2P ไม่สำเร็จ — โหมดออนไลน์อาจใช้ไม่ได้ (เล่นในเครื่องเดียวได้ปกติ)';
+    show('s-online'); });
+  on('btn-go-rules',function(){ AU.tap(); show('s-rules'); });
+
+  // setup
+  on('btn-setup-back',function(){ AU.tap(); show('s-home'); });
+  on('pc-minus',function(){ AU.tap(); setCount(SETUP.count-1); });
+  on('pc-plus',function(){ AU.tap(); setCount(SETUP.count+1); });
+  var dc=$('diff-chips').querySelectorAll('.chip');
+  for(var i=0;i<dc.length;i++){
+    (function(b){ b.addEventListener('click',function(){
+      for(var k=0;k<dc.length;k++) dc[k].classList.remove('sel');
+      b.classList.add('sel'); G.level=b.getAttribute('data-lv'); AU.tap();
+    }); })(dc[i]);
+  }
+  var tc=$('time-chips').querySelectorAll('.chip');
+  for(var j=0;j<tc.length;j++){
+    (function(b){ b.addEventListener('click',function(){
+      for(var k=0;k<tc.length;k++) tc[k].classList.remove('sel');
+      b.classList.add('sel'); G.timerSec=parseInt(b.getAttribute('data-t'),10)||0; AU.tap();
+    }); })(tc[j]);
+  }
+  on('btn-start-local',function(){
+    AU.init(); AU.tap();
+    var ps=[];
+    for(var i=0;i<SETUP.count;i++){
+      var nm=(SETUP.names[i]||'').trim()||DEF_NAMES[i]||('ผู้เล่น'+(i+1));
+      ps.push({id:'p'+i,name:nm.slice(0,12),isBot:!!SETUP.bots[i],level:G.level,score:0});
+    }
+    var humans=ps.filter(function(p){return !p.isBot;}).length;
+    if(humans===0){ toast('ต้องมีผู้เล่นที่เป็นคนอย่างน้อย 1 คน'); return; }
+    G.mode='local'; G.players=ps; G.round=0; rebuildMap();
+    localStartGame();
+  });
+
+  // online
+  on('btn-online-back',function(){ AU.tap(); show('s-home'); });
+  on('btn-on-host',function(){ AU.tap(); netHost(($('on-name').value||'').trim()||'เจ้าบ้าน'); });
+  on('btn-on-join',function(){ AU.tap(); netJoin(($('on-name').value||'').trim()||'ผู้เล่น',($('on-code').value||'').trim()); });
+  on('btn-lobby-leave',function(){ try{ NET.peer&&NET.peer.destroy(); }catch(e){} NET={peer:null,isHost:false,conns:{},myId:null,code:null,hostConn:null,peerToPid:{}}; show('s-home'); });
+  on('btn-lobby-bot',function(){
+    if(!NET.isHost) return;
+    if(G.players.length>=8){ toast('เต็ม 8 คนแล้ว'); return; }
+    var i=G.players.length;
+    G.players.push({id:'p'+i,name:'บอท '+DEF_NAMES[i%8],isBot:true,level:G.level,score:0});
+    rebuildMap(); renderLobby(); netLobbyBroadcast(); AU.tap();
+  });
+  on('btn-lobby-start',function(){
+    if(!NET.isHost) return;
+    if(G.players.length<4){ toast('ต้องมีอย่างน้อย 4 คน'); return; }
+    AU.tap(); netLobbyBroadcast(); netStartGame();
+  });
+
+  // handoff
+  on('btn-ho-open',function(){
+    AU.tap();
+    if(CUR!=='s-handoff') return;
+    if(VQ.list.length && VQ.i<VQ.list.length && G.localActor===VQ.list[VQ.i] && !G.votes[G.localActor] && LQ.i>=LQ.list.length){
+      renderVote(pktVote(G.localActor));
+    } else if(LQ.list.length && LQ.i<LQ.list.length){
+      openPrivate(LQ.list[LQ.i],LQ.kind);
+    } else {
+      renderVote(pktVote(G.localActor));
+    }
+  });
+
+  // private
+  $('pv-card').addEventListener('click',function(){
+    if(PV.step!==0) return;
+    if(!$('pv-card').classList.contains('flip')){ $('pv-card').classList.add('flip'); AU.flip(); PV.revealed=true; }
+  });
+  on('btn-pv-torole',function(){
+    if(!PV.revealed){ toast('แตะการ์ดเพื่อดูบทบาทก่อน'); return; }
+    AU.tap(); PV.step=1; showPvStep();
+  });
+  $('pv-cup').addEventListener('click',function(){
+    AU.flip();
+    $('pv-cup').style.display='none';
+    $('pv-die-wrap').style.display='flex';
+    $('btn-pv-todie').disabled=false;
+  });
+  on('btn-pv-todie',function(){ AU.tap(); PV.step=2; showPvStep(); });
+  on('btn-pv-done',function(){ AU.tap(); finishPrivate(); });
+
+  // morning
+  on('btn-morning-next',function(){ AU.tap(); startDiscussion(); });
+
+  // discussion
+  (function(){
+    var hw=$('dc-hours'); clr(hw);
+    for(var h=1;h<=6;h++){
+      (function(h){
+        var b=el('button','chip sm','ตี '+h);
+        b.addEventListener('click',function(){
+          var all=hw.querySelectorAll('.chip'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+          b.classList.add('sel'); DT.hour=h; AU.tap();
+        });
+        hw.appendChild(b);
+      })(h);
+    }
+    var vw=$('dc-ins-v'); clr(vw);
+    for(var v=1;v<=6;v++){
+      (function(v){
+        var b=el('button','chip sm',String(v));
+        b.addEventListener('click',function(){
+          var all=vw.querySelectorAll('.chip'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+          b.classList.add('sel'); DT.insV=v; AU.tap();
+        });
+        vw.appendChild(b);
+      })(v);
+    }
+  })();
+  var sawBtns=$('dc-saw').querySelectorAll('.chip');
+  for(var q=0;q<sawBtns.length;q++){
+    (function(b){
+      b.addEventListener('click',function(){
+        for(var k=0;k<sawBtns.length;k++) sawBtns[k].classList.remove('sel');
+        b.classList.add('sel'); DT.saw=b.getAttribute('data-s'); AU.tap();
+        $('dc-target-wrap').style.display=(DT.saw==='theft')?'block':'none';
+      });
+    })(sawBtns[q]);
+  }
+  on('dc-ins-toggle',function(){
+    DT.ins=!DT.ins; $('dc-ins-toggle').classList.toggle('sel',DT.ins);
+    $('dc-ins-wrap').style.display=DT.ins?'block':'none'; AU.tap();
+  });
+  on('btn-dc-submit',function(){
+    if(!DT.hour){ toast('เลือกเวลาที่คุณอ้างว่าตื่นก่อน'); return; }
+    if(!DT.saw){ toast('เลือกสิ่งที่คุณอ้างว่าเห็น'); return; }
+    if(DT.saw==='theft'&&!DT.target){ toast('เลือกคนที่คุณอ้างว่าเห็นขโมย'); return; }
+    if(DT.ins&&(!DT.insP||!DT.insV)){ toast('ระบุคนและเลขที่คุณอ้างว่าแอบดูได้'); return; }
+    AU.squeak();
+    submitAction({type:'testimony',t:{hour:DT.hour,saw:DT.saw,theftTarget:DT.saw==='theft'?DT.target:null,
+      insTarget:DT.ins?DT.insP:null,insVal:DT.ins?DT.insV:null}});
+  });
+  on('btn-dc-vote',function(){ AU.tap(); if(G.mode==='local') startVote(null); else submitAction({type:'gotoVote'}); });
+
+  // vote
+  on('btn-vt-confirm',function(){
+    var s=$('btn-vt-confirm').getAttribute('data-sel');
+    if(!s) return; AU.tap(); doVote(s);
+  });
+  on('btn-vr-next',function(){ AU.tap(); var f=VR_NEXT; VR_NEXT=null; if(f) f(); });
+
+  // reveal
+  $('rv-card').addEventListener('click',function(){
+    if($('rv-card').classList.contains('flip')) return;
+    $('rv-card').classList.add('flip'); AU.flip();
+    $('btn-rv-next').disabled=false;
+  });
+  on('btn-rv-next',function(){ AU.tap(); applyResult(); });
+
+  // result
+  on('btn-rs-home',function(){ AU.tap(); timerStop(); show('s-home'); });
+  on('btn-rs-new',function(){
+    AU.tap(); timerStop();
+    if(G.mode==='local'){ localStartGame(); }
+    else if(NET.isHost){ netStartGame(); }
+    else toast('รอเจ้าบ้านเริ่มรอบใหม่');
+  });
+}
+
+/* =========================================================
+   16) INIT
+   ========================================================= */
+function init(){
+  buildRules();
+  setCount(5);
+  wire();
+  show('s-home');
+  // self-check: ปุ่มสำคัญต้องมีครบ
+  var need=['btn-go-local','btn-start-local','btn-ho-open','btn-pv-torole','btn-pv-todie','btn-pv-done',
+            'btn-morning-next','btn-dc-submit','btn-dc-vote','btn-vt-confirm','btn-vr-next','btn-rv-next','btn-rs-new'];
+  var miss=need.filter(function(id){ return !$(id); });
+  if(miss.length) fail('ปุ่มหาย: '+miss.join(', '));
+}
+try{ init(); }catch(e){ fail('เริ่มเกมไม่สำเร็จ: '+(e&&e.message)); }
+})();
+</script>
+</body>
+</html>
